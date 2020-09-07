@@ -11,7 +11,7 @@
   alex@alexgyver.ru
 */
 
-#define MAX_SPEED 170   // максимальная скорость моторов (0-255)
+#define MAX_SPEED 255   // максимальная скорость моторов (0-255)
 
 #define MOTOR_TEST 0    // тест моторов
 // при запуске крутятся ВПЕРЁД по очереди:
@@ -32,10 +32,10 @@
 
 #include <GyverMotor.h>
 // тут можно поменять моторы местами
-GMotor motorBL(DRIVER2WIRE, MOTOR1_A, MOTOR1_B, HIGH);
-GMotor motorFL(DRIVER2WIRE, MOTOR2_A, MOTOR2_B, HIGH);
-GMotor motorFR(DRIVER2WIRE, MOTOR3_A, MOTOR3_B, HIGH);
-GMotor motorBR(DRIVER2WIRE, MOTOR4_A, MOTOR4_B, HIGH);
+GMotor motorFL(DRIVER2WIRE, MOTOR1_A, MOTOR1_B, HIGH);
+GMotor motorBL(DRIVER2WIRE, MOTOR2_A, MOTOR2_B, HIGH);
+GMotor motorBR(DRIVER2WIRE, MOTOR3_A, MOTOR3_B, HIGH);
+GMotor motorFR(DRIVER2WIRE, MOTOR4_A, MOTOR4_B, HIGH);
 
 // пины ресивера ps2
 #define PS2_DAT A0
@@ -109,27 +109,27 @@ void setup() {
   ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, false, false);
 }
 
-void loop() {
+void loop() {  
   //DualShock Controller
   bool success = ps2x.read_gamepad(false, 0);  // читаем
   ps2x.reconfig_gamepad();      // костыль https://stackoverflow.com/questions/46493222/why-arduino-needs-to-be-restarted-after-ps2-controller-communication-in-arduino
 
-  if (success) {
+  if (success) {    
     // переводим диапазон 0..255 в -MAX_SPEED..MAX_SPEED
     int valLX = map(ps2x.Analog(PSS_LX), 0, 256, -MAX_SPEED, MAX_SPEED);
     int valLY = map(ps2x.Analog(PSS_LY), 256, 0, -MAX_SPEED, MAX_SPEED); // инвертируем
     int valRX = map(ps2x.Analog(PSS_RX), 0, 256, -MAX_SPEED, MAX_SPEED);
     int valRY = map(ps2x.Analog(PSS_RY), 256, 0, -MAX_SPEED, MAX_SPEED); // инвертируем
 
-    int dutyFR = valLY + valLX;
-    int dutyFL = valLY - valLX;
-    int dutyBR = valLY - valLX;
-    int dutyBL = valLY + valLX;
+    int dutyFL = valRY + valRX;
+    int dutyFR = valRY - valRX;
+    int dutyBL = valRY - valRX;
+    int dutyBR = valRY + valRX;    
 
-    dutyFR += valRY - valRX;
-    dutyFL += valRY + valRX;
-    dutyBR += valRY - valRX;
-    dutyBL += valRY + valRX;
+    dutyFL += valLY + valLX;
+    dutyFR += valLY - valLX;
+    dutyBL += valLY + valLX;
+    dutyBR += valLY - valLX;    
 
     // ПЛАВНЫЙ контроль скорости, защита от рывков
     motorFR.smoothTick(dutyFR);
