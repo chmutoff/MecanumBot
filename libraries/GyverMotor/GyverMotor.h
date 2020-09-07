@@ -13,6 +13,9 @@
 		- Поддержка двух типов драйверов и реле
 		- Плавный пуск и изменение скорости
 	- Версия 2.1: небольшие фиксы и добавления
+	- Версия 2.2: оптимизация
+	- Версия 2.3: добавлена поддержка esp (исправлены ошибки)
+	- Версия 2.4: совместимость с другими библами
 		
 	Документация: https://alexgyver.ru/gyvermotor/
 	AlexGyver, 2020
@@ -20,18 +23,16 @@
 
 #define _SMOOTH_PRD 50	// таймер smoothTick, мс
 
-enum driverType {
+enum GM_driverType {
 	DRIVER2WIRE,
 	DRIVER3WIRE,
 	RELAY2WIRE,
 };
 
-enum dir {
-	NORMAL,
-	REVERSE,
-};
+#define NORMAL 0
+#define REVERSE 1
 
-enum workMode {
+enum GM_workMode {
 	FORWARD,
 	BACKWARD,
 	STOP,
@@ -39,11 +40,11 @@ enum workMode {
 	AUTO = 0,
 };
 
-static const int8_t NC = -1;	// not connected
+static const int8_t _GM_NC = -1;	// not connected
 
 class GMotor {
 public:
-	GMotor(driverType type, int8_t param1 = NC, int8_t param2 = NC, int8_t param3 = NC, int8_t param4 = NC);
+	GMotor(GM_driverType type, int8_t param1 = _GM_NC, int8_t param2 = _GM_NC, int8_t param3 = _GM_NC, int8_t param4 = _GM_NC);
 	// три варианта создания объекта в зависимости от драйвера:
 	// GMotor motor(DRIVER2WIRE, dig_pin, PWM_pin, (LOW/HIGH) )
 	// GMotor motor(DRIVER3WIRE, dig_pin_A, dig_pin_B, PWM_pin, (LOW/HIGH) )
@@ -57,13 +58,13 @@ public:
 	// BACKWARD - назад
 	// STOP - остановить
 	// BRAKE - активное торможение
-	// AUTO - подчиняется setSpeed (положит., отрицат., ноль)
-	void setMode(workMode mode);
+	// AUTO - подчиняется setSpeed (-255.. 255)
+	void setMode(GM_workMode mode);
 	
 	// направление вращения	
 	// NORM - обычное
 	// REVERSE - обратное
-	void setDirection(dir direction);
+	void setDirection(bool direction);
 	
 	// установить минимальную скважность (при которой мотор начинает крутиться)
 	void setMinDuty(int duty);
@@ -94,15 +95,15 @@ public:
 	
 protected:
 	void setPins(bool a, bool b, int c);	
-	void run(workMode mode, int16_t duty = 0);		// дать прямую команду мотору (без смены режима)
+	void run(GM_workMode mode, int16_t duty = 0);		// дать прямую команду мотору (без смены режима)
 	
 	int _minDuty = 0, _state = 0;;
-	int8_t _digA = NC, _digB = NC, _pwmC = NC;
+	int8_t _digA = _GM_NC, _digB = _GM_NC, _pwmC = _GM_NC;
 	bool _direction = false;
 	int8_t _resolution = 0, _level = HIGH;
 	int _maxDuty = 254;
-	workMode _mode = 0, _lastMode = 0;
-	driverType _type = 0;
+	GM_workMode _mode = FORWARD, _lastMode = FORWARD;
+	GM_driverType _type;
 	uint16_t _deadtime = 0;
 	uint8_t _speed = 20;
 	uint32_t _tmr = 0;
