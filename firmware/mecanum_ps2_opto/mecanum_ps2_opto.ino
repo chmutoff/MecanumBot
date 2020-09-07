@@ -47,10 +47,10 @@
 
 #include <AccelMotor.h>
 // тут можно поменять моторы местами
-AccelMotor motorBL(DRIVER2WIRE, MOTOR1_A, MOTOR1_B, HIGH);
-AccelMotor motorFL(DRIVER2WIRE, MOTOR2_A, MOTOR2_B, HIGH);
-AccelMotor motorFR(DRIVER2WIRE, MOTOR3_A, MOTOR3_B, HIGH);
-AccelMotor motorBR(DRIVER2WIRE, MOTOR4_A, MOTOR4_B, HIGH);
+AccelMotor motorFL(DRIVER2WIRE, MOTOR1_A, MOTOR1_B, HIGH);
+AccelMotor motorBL(DRIVER2WIRE, MOTOR2_A, MOTOR2_B, HIGH);
+AccelMotor motorBR(DRIVER2WIRE, MOTOR3_A, MOTOR3_B, HIGH);
+AccelMotor motorFR(DRIVER2WIRE, MOTOR4_A, MOTOR4_B, HIGH);
 
 // пины ресивера ps2
 #define PS2_DAT A0
@@ -258,15 +258,15 @@ void loop() {
         int valRX = map(ps2x.Analog(PSS_RX), 0, 256, -MAX_SPEED, MAX_SPEED);
         int valRY = map(ps2x.Analog(PSS_RY), 256, 0, -MAX_SPEED, MAX_SPEED); // инвертируем ось
 
-        int dutyFR = valLY + valLX;
-        int dutyFL = valLY - valLX;
-        int dutyBR = valLY - valLX;
-        int dutyBL = valLY + valLX;
-
-        dutyFR += valRY - valRX;
-        dutyFL += valRY + valRX;
-        dutyBR += valRY - valRX;
-        dutyBL += valRY + valRX;
+        int dutyFL = valRY + valRX;
+        int dutyFR = valRY - valRX;
+        int dutyBL = valRY - valRX;
+        int dutyBR = valRY + valRX;    
+    
+        dutyFL += valLY + valLX;
+        dutyFR += valLY - valLX;
+        dutyBL += valLY + valLX;
+        dutyBR += valLY - valLX; 
 
         // ПИД контроль скорости
         motorFR.setTargetSpeed(dutyFR);
