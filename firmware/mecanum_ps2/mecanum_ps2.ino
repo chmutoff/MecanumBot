@@ -110,50 +110,35 @@ void setup() {
   ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, false, false);
 }
 
+int mapStickX(byte val) {
+    if (val < 128 && val >= 0) {
+        return -map(val, 127, 0, MIN_DUTY, MAX_SPEED);
+    } else if (val > 128 && val <= 255) {
+        return map(val, 129, 255, MIN_DUTY, MAX_SPEED);
+    } else  {
+        return 0;
+    }
+}
+
+int mapStickY(byte val) {
+    if (val < 128 && val >= 0) {
+        return map(val, 127, 0, MIN_DUTY, MAX_SPEED);
+    } else if (val > 128 && val <= 255) {
+        return -map(val, 129, 255, MIN_DUTY, MAX_SPEED);
+    } else  {
+        return 0;
+    }
+}
+
 void loop() {
   bool success = ps2x.read_gamepad(false, 0);  // читаем
   ps2x.reconfig_gamepad();      // костыль https://stackoverflow.com/questions/46493222/why-arduino-needs-to-be-restarted-after-ps2-controller-communication-in-arduino
 
-  if (success) {    
-    byte LX = ps2x.Analog(PSS_LX);
-    int valLX; // = map(LX, 0, 256, -MAX_SPEED, MAX_SPEED);
-    if (LX < 128 && LX >= 0) { // STICK UP
-        valLX = -map(LX, 127, 0, MIN_DUTY, MAX_SPEED);
-    } else if (LX > 128 && LX <= 255) { // STICK DOWN
-        valLX = map(LX, 129, 255, MIN_DUTY, MAX_SPEED);
-    } else  {// STICK CENTER
-        valLX = 0;
-    }
-   
-    byte LY = ps2x.Analog(PSS_LY);
-    int valLY; // = map(LY, 256, 0, -MAX_SPEED, MAX_SPEED); // инвертируем ось
-    if (LY < 128 && LY >= 0) { // STICK UP
-        valLY = map(LY, 127, 0, MIN_DUTY, MAX_SPEED);
-    } else if (LY > 128 && LY <= 255) { // STICK DOWN
-        valLY = -map(LY, 129, 255, MIN_DUTY, MAX_SPEED);
-    } else  {// STICK CENTER
-        valLY = 0;
-    }
-    
-    byte RX = ps2x.Analog(PSS_RX);
-    int valRX; // = map(RX, 0, 256, -MAX_SPEED, MAX_SPEED);
-    if (RX < 128 && RX >= 0) { // STICK UP
-        valRX = -map(RX, 127, 0, MIN_DUTY, MAX_SPEED);
-    } else if (RX > 128 && RX <= 255) { // STICK DOWN                
-        valRX = map(RX, 129, 255, MIN_DUTY, MAX_SPEED);
-    } else  {// STICK CENTER
-        valRX = 0;
-    }
-    
-    byte RY = ps2x.Analog(PSS_RY);
-    int valRY; // = map(RY, 256, 0, -MAX_SPEED, MAX_SPEED);
-    if (RY < 128 && RY >= 0) { // STICK UP
-        valRY = map(RY, 127, 0, MIN_DUTY, MAX_SPEED);
-    } else if (RY > 128 && RY <= 255) { // STICK DOWN
-        valRY = -map(RY, 129, 255, MIN_DUTY, MAX_SPEED);
-    } else  {// STICK CENTER
-        valRY = 0;
-    }
+  if (success) {
+    int valLX = mapStickX(ps2x.Analog(PSS_LX));
+    int valLY = mapStickY(ps2x.Analog(PSS_LY));
+    int valRX = mapStickX(ps2x.Analog(PSS_RX));
+    int valRY = mapStickY(ps2x.Analog(PSS_RY));
 
     int dutyFL = valRY + valRX;
     int dutyFR = valRY - valRX;
