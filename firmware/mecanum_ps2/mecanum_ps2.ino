@@ -12,6 +12,7 @@
 */
 
 #define MAX_SPEED 255   // максимальная скорость моторов (0-255)
+#define MIN_DUTY 100
 
 #define MOTOR_TEST 0    // тест моторов
 // при запуске крутятся ВПЕРЁД по очереди:
@@ -88,10 +89,10 @@ void setup() {
   motorBR.setMode(STOP);
 #endif
   // минимальный сигнал на мотор
-  motorFR.setMinDuty(30);
-  motorBR.setMinDuty(30);
-  motorFL.setMinDuty(30);
-  motorBL.setMinDuty(30);
+  motorFR.setMinDuty(MIN_DUTY);
+  motorBR.setMinDuty(MIN_DUTY);
+  motorFL.setMinDuty(MIN_DUTY);
+  motorBL.setMinDuty(MIN_DUTY);
 
   // режим мотора в АВТО
   motorFR.setMode(AUTO);
@@ -109,17 +110,50 @@ void setup() {
   ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, false, false);
 }
 
-void loop() {  
-  //DualShock Controller
+void loop() {
   bool success = ps2x.read_gamepad(false, 0);  // читаем
   ps2x.reconfig_gamepad();      // костыль https://stackoverflow.com/questions/46493222/why-arduino-needs-to-be-restarted-after-ps2-controller-communication-in-arduino
 
   if (success) {    
-    // переводим диапазон 0..255 в -MAX_SPEED..MAX_SPEED
-    int valLX = map(ps2x.Analog(PSS_LX), 0, 256, -MAX_SPEED, MAX_SPEED);
-    int valLY = map(ps2x.Analog(PSS_LY), 256, 0, -MAX_SPEED, MAX_SPEED); // инвертируем
-    int valRX = map(ps2x.Analog(PSS_RX), 0, 256, -MAX_SPEED, MAX_SPEED);
-    int valRY = map(ps2x.Analog(PSS_RY), 256, 0, -MAX_SPEED, MAX_SPEED); // инвертируем
+    byte LX = ps2x.Analog(PSS_LX);
+    int valLX; // = map(LX, 0, 256, -MAX_SPEED, MAX_SPEED);
+    if (LX < 128 && LX >= 0) { // STICK UP
+        valLX = -map(LX, 127, 0, MIN_DUTY, MAX_SPEED);
+    } else if (LX > 128 && LX <= 255) { // STICK DOWN
+        valLX = map(LX, 129, 255, MIN_DUTY, MAX_SPEED);
+    } else  {// STICK CENTER
+        valLX = 0;
+    }
+   
+    byte LY = ps2x.Analog(PSS_LY);
+    int valLY; // = map(LY, 256, 0, -MAX_SPEED, MAX_SPEED); // инвертируем ось
+    if (LY < 128 && LY >= 0) { // STICK UP
+        valLY = map(LY, 127, 0, MIN_DUTY, MAX_SPEED);
+    } else if (LY > 128 && LY <= 255) { // STICK DOWN
+        valLY = -map(LY, 129, 255, MIN_DUTY, MAX_SPEED);
+    } else  {// STICK CENTER
+        valLY = 0;
+    }
+    
+    byte RX = ps2x.Analog(PSS_RX);
+    int valRX; // = map(RX, 0, 256, -MAX_SPEED, MAX_SPEED);
+    if (RX < 128 && RX >= 0) { // STICK UP
+        valRX = -map(RX, 127, 0, MIN_DUTY, MAX_SPEED);
+    } else if (RX > 128 && RX <= 255) { // STICK DOWN                
+        valRX = map(RX, 129, 255, MIN_DUTY, MAX_SPEED);
+    } else  {// STICK CENTER
+        valRX = 0;
+    }
+    
+    byte RY = ps2x.Analog(PSS_RY);
+    int valRY; // = map(RY, 256, 0, -MAX_SPEED, MAX_SPEED);
+    if (RY < 128 && RY >= 0) { // STICK UP
+        valRY = map(RY, 127, 0, MIN_DUTY, MAX_SPEED);
+    } else if (RY > 128 && RY <= 255) { // STICK DOWN
+        valRY = -map(RY, 129, 255, MIN_DUTY, MAX_SPEED);
+    } else  {// STICK CENTER
+        valRY = 0;
+    }
 
     int dutyFL = valRY + valRX;
     int dutyFR = valRY - valRX;
@@ -129,7 +163,7 @@ void loop() {
     dutyFL += valLY + valLX;
     dutyFR += valLY - valLX;
     dutyBL += valLY + valLX;
-    dutyBR += valLY - valLX;    
+    dutyBR += valLY - valLX;
 
     // ПЛАВНЫЙ контроль скорости, защита от рывков
     motorFR.smoothTick(dutyFR);
