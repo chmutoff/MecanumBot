@@ -111,23 +111,23 @@ void setup() {
 }
 
 int mapStickX(byte val) {
-    if (val < 128 && val >= 0) {
-        return -map(val, 127, 0, MIN_DUTY, MAX_SPEED);
-    } else if (val > 128 && val <= 255) {
-        return map(val, 129, 255, MIN_DUTY, MAX_SPEED);
-    } else  {
-        return 0;
-    }
+  if (val < 128 && val >= 0) {
+    return -map(val, 127, 0, MIN_DUTY, MAX_SPEED);
+  } else if (val > 128 && val <= 255) {
+    return map(val, 129, 255, MIN_DUTY, MAX_SPEED);
+  } else  {
+    return 0;
+  }
 }
 
 int mapStickY(byte val) {
-    if (val < 128 && val >= 0) {
-        return map(val, 127, 0, MIN_DUTY, MAX_SPEED);
-    } else if (val > 128 && val <= 255) {
-        return -map(val, 129, 255, MIN_DUTY, MAX_SPEED);
-    } else  {
-        return 0;
-    }
+  if (val < 128 && val >= 0) {
+    return map(val, 127, 0, MIN_DUTY, MAX_SPEED);
+  } else if (val > 128 && val <= 255) {
+    return -map(val, 129, 255, MIN_DUTY, MAX_SPEED);
+  } else  {
+    return 0;
+  }
 }
 
 void loop() {
@@ -143,7 +143,7 @@ void loop() {
     int dutyFL = valRY + valRX;
     int dutyFR = valRY - valRX;
     int dutyBL = valRY - valRX;
-    int dutyBR = valRY + valRX;    
+    int dutyBR = valRY + valRX;
 
     dutyFL += valLY + valLX;
     dutyFR += valLY - valLX;
